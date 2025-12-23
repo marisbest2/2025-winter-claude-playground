@@ -1,82 +1,112 @@
-# Claude Code Setup Guide
+# Teaneck Meeting Tracker
 
-## Initial Repository Setup
+## Project Overview
 
-### 1. Create Next.js Project
+A civic transparency tool that makes Teaneck Township (NJ) government meetings accessible. Crawls official sources, generates AI summaries, and cross-references agendas with minutes and video.
+
+**Documentation:**
+- [PRD](docs/PRD.md) - Product requirements and vision
+- [Project Plan](docs/PROJECT_PLAN.md) - Milestones and implementation plan
+
+## Architecture
+
+```
+apps/
+  web/                 # Next.js frontend
+services/
+  agents/              # Multi-agent orchestration
+    coordinator/       # Main orchestrator
+    scrapers/          # IQM2, YouTube scrapers
+    summarizers/       # AI summarization
+    cross-reference/   # Document matching
+  python/              # Reserved for Python services
+packages/
+  shared/              # Shared types and utilities
+  db/                  # Prisma database client
+```
+
+## Data Sources
+
+- **IQM2 Portal**: https://teanecktownnj.iqm2.com/Citizens/default.aspx (requires Playwright)
+- **YouTube**: https://www.youtube.com/@TeaneckNJ07666
+- **Township Site**: https://www.teanecknj.gov
+
+## Tech Stack
+
+- TypeScript + Next.js 16 + React 19 + Tailwind
+- Prisma + SQLite (dev) → PostgreSQL (prod)
+- Anthropic Claude API for summarization
+- Playwright for dynamic scraping
+- pnpm workspaces monorepo
+
+## Git Workflow
+
+**Always follow gitflow with squash merges:**
+
+1. `git checkout -b feature/description` (or `milestone-X/description`)
+2. Make commits, push branch
+3. `gh pr create --title "..." --body "..."`
+4. `gh pr merge <number> --squash`
+5. `git checkout main && git pull && git branch -d feature/description`
+
+**Branch prefixes:** `feature/`, `fix/`, `docs/`, `milestone-X/`
+
+## Commands
 
 ```bash
-npx create-next-app@latest . --typescript --tailwind --eslint --app --src-dir --import-alias "@/*" --yes
+# Development
+pnpm dev                              # Start web app
+pnpm --filter @teaneck/agents dev     # Watch agents
+pnpm -r test                          # Test all packages
+pnpm format                           # Format code
+
+# Database
+pnpm --filter @teaneck/db db:migrate  # Run migrations
+pnpm --filter @teaneck/db db:studio   # Open Prisma Studio
+
+# Single package
+pnpm --filter @teaneck/web build      # Build web only
+pnpm --filter @teaneck/agents test    # Test agents only
 ```
 
-### 2. Install Core Dependencies
+## Environment Variables
 
-```bash
-npm install @anthropic-ai/sdk cheerio zod prisma @prisma/client
-npx prisma init --datasource-provider sqlite
-```
-
-### 3. Environment Variables
-
-Create `.env.local`:
+Required in `.env.local` (root) or `.env` (packages/db):
 
 ```
-ANTHROPIC_API_KEY=your-key-here
+ANTHROPIC_API_KEY=sk-ant-...
 DATABASE_URL="file:./dev.db"
+YOUTUBE_API_KEY=...  # Optional until Milestone 3
 ```
 
-**Important:** Never paste API keys directly in chat - they get logged. Use:
-
+**Never paste API keys in chat.** Use:
 ```bash
 read -s KEY && echo "ANTHROPIC_API_KEY=$KEY" >> .env.local
 ```
 
-### 4. GitHub CLI Setup
+## Code Style
 
-```bash
-brew install gh
-gh auth login -h github.com -p https -w
-```
+- Prettier for formatting (pre-commit hook)
+- ESLint for linting
+- TypeScript strict mode enabled
+- Zod for runtime validation
+- TDD where possible (write tests first)
 
-If you need workflow permissions (for GitHub Actions):
+## Current Status
 
-```bash
-gh auth refresh -h github.com -s repo,workflow
-```
+**Active Milestone:** 0 - Data Source Exploration
 
-### 5. Install Claude GitHub App
+See [PROJECT_PLAN.md](docs/PROJECT_PLAN.md) for full roadmap.
 
-Run `/install-github-app` in Claude Code to set up:
+## Claude Code Permissions
 
-- `claude.yml` - PR assistant workflow
-- `claude-code-review.yml` - Code review workflow
+Claude has full read/write access to:
+- All source code in `apps/`, `services/`, `packages/`
+- Documentation in `docs/`
+- Configuration files (package.json, tsconfig, etc.)
+- Git operations (branches, commits, PRs)
 
-## Project Structure
-
-```
-src/
-  app/           # Next.js App Router pages
-prisma/
-  schema.prisma  # Database schema
-```
-
-## Git Workflow
-
-**Always follow gitflow:**
-
-1. Create a feature branch from main: `git checkout -b feature/description`
-2. Make commits on the feature branch
-3. Push and create a PR: `git push -u origin feature/description && gh pr create`
-4. **Always squash merge:** `gh pr merge <number> --squash`
-5. Pull main and clean up: `git checkout main && git pull && git branch -d feature/description`
-
-**Branch naming:**
-
-- `feature/` - New features
-- `fix/` - Bug fixes
-- `docs/` - Documentation updates
-
-## Common Commands
-
-- `npm run dev` - Start dev server
-- `npx prisma migrate dev` - Run database migrations
-- `npx prisma studio` - Open database GUI
+Claude should NOT:
+- Commit `.env*` files
+- Push directly to main (use PRs)
+- Run destructive git commands without asking
