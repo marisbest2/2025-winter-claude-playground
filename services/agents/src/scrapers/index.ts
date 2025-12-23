@@ -1,14 +1,3 @@
-// Scraper agents - fetch meeting data
-export class ScraperAgent {
-  async scrapeAgendas() {
-    console.log('Scraping agendas')
-  }
-
-  async scrapeMinutes() {
-    console.log('Scraping minutes')
-  }
-
-  async scrapeVideos() {
-    console.log('Scraping videos')
-  }
-}
+// IQM2 Portal scraper
+export { IQM2Scraper } from './iqm2'
+export type { Board, Meeting, MeetingDocument } from './iqm2'

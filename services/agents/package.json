@@ -7,18 +7,22 @@
   "scripts": {
     "dev": "tsx watch src/index.ts",
     "build": "tsc",
-    "start": "node dist/index.js"
+    "start": "node dist/index.js",
+    "test": "vitest",
+    "test:run": "vitest run"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.71.2",
-    "@teaneck/shared": "workspace:*",
     "@teaneck/db": "workspace:*",
+    "@teaneck/shared": "workspace:*",
     "cheerio": "^1.1.2",
+    "playwright": "^1.57.0",
     "zod": "^4.2.1"
   },
   "devDependencies": {
     "@types/node": "^20",
     "tsx": "^4.19.2",
-    "typescript": "^5"
+    "typescript": "^5",
+    "vitest": "^4.0.16"
   }
 }
