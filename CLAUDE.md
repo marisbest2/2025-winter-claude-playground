@@ -49,6 +49,20 @@ prisma/
   schema.prisma  # Database schema
 ```
 
+## Git Workflow
+
+**Always follow gitflow:**
+1. Create a feature branch from main: `git checkout -b feature/description`
+2. Make commits on the feature branch
+3. Push and create a PR: `git push -u origin feature/description && gh pr create`
+4. **Always squash merge:** `gh pr merge <number> --squash`
+5. Pull main and clean up: `git checkout main && git pull && git branch -d feature/description`
+
+**Branch naming:**
+- `feature/` - New features
+- `fix/` - Bug fixes
+- `docs/` - Documentation updates
+
 ## Common Commands
 - `npm run dev` - Start dev server
 - `npx prisma migrate dev` - Run database migrations
