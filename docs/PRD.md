@@ -7,6 +7,7 @@ A civic transparency tool that makes Teaneck Township government meetings access
 ## Problem Statement
 
 Local government meetings contain important information about community decisions, but:
+
 - Meeting recordings are long (2-4 hours)
 - Agendas and minutes are dense PDFs
 - Information is scattered across multiple platforms
@@ -32,15 +33,18 @@ Local government meetings contain important information about community decision
 ## Data Sources
 
 ### 1. IQM2 Citizens Portal (Granicus)
+
 **URL**: https://teanecktownnj.iqm2.com/Citizens/default.aspx
 
 **Content**:
+
 - Meeting agendas (PDF)
 - Meeting minutes (PDF)
 - Meeting videos (embedded or linked)
 - Historical archive
 
 **Known URL Patterns**:
+
 - `/Citizens/FileOpen.aspx?Type=30&ID={id}` - Document access
 - `/Citizens/VideoMain.aspx?MeetingID={id}` - Video outline
 - `/Citizens/Board` - Board/committee info
@@ -48,9 +52,11 @@ Local government meetings contain important information about community decision
 **Technical Challenge**: Dynamic content requires Playwright (simple fetch fails)
 
 ### 2. YouTube Channel
+
 **URL**: https://www.youtube.com/@TeaneckNJ07666
 
 **Content**:
+
 - Council meeting recordings
 - Workshop recordings
 - Special meeting recordings
@@ -58,9 +64,11 @@ Local government meetings contain important information about community decision
 **Technical Approach**: YouTube Data API for metadata, transcripts via YouTube transcript API or Whisper
 
 ### 3. Township Website
+
 **URL**: https://www.teanecknj.gov
 
 **Content**:
+
 - Meeting calendar
 - Board/committee member info
 - Contact information
@@ -71,27 +79,29 @@ Local government meetings contain important information about community decision
 
 Based on typical municipal structure (to be verified):
 
-| Board/Committee | Frequency | Priority |
-|----------------|-----------|----------|
-| Township Council | 2x/month | High |
-| Planning Board | Monthly | Medium |
-| Zoning Board | Monthly | Medium |
-| Board of Education | Monthly | Medium |
-| Library Board | Monthly | Low |
-| Environmental Commission | Monthly | Low |
-| Other advisory boards | Varies | Low |
+| Board/Committee          | Frequency | Priority |
+| ------------------------ | --------- | -------- |
+| Township Council         | 2x/month  | High     |
+| Planning Board           | Monthly   | Medium   |
+| Zoning Board             | Monthly   | Medium   |
+| Board of Education       | Monthly   | Medium   |
+| Library Board            | Monthly   | Low      |
+| Environmental Commission | Monthly   | Low      |
+| Other advisory boards    | Varies    | Low      |
 
 ---
 
 ## User Stories
 
 ### Resident
+
 - As a resident, I want to see a summary of the latest council meeting so I can stay informed in 5 minutes
 - As a resident, I want to search for discussions about "affordable housing" across all meetings
 - As a resident, I want to compare what was on the agenda vs what was actually discussed
 - As a resident, I want to get notified when a new meeting summary is available
 
 ### Power User / Journalist
+
 - As a journalist, I want to track specific topics over time to identify patterns
 - As a power user, I want to see the original source documents linked from summaries
 - As a power user, I want to export meeting data for my own analysis
@@ -101,6 +111,7 @@ Based on typical municipal structure (to be verified):
 ## Core Features
 
 ### Phase 1: Foundation
+
 1. **Data Ingestion Pipeline**
    - Scrape IQM2 portal for agendas/minutes
    - Fetch YouTube video metadata
@@ -117,6 +128,7 @@ Based on typical municipal structure (to be verified):
    - View original documents (PDF viewer or links)
 
 ### Phase 2: Cross-Reference
+
 4. **Agenda ↔ Minutes Matching**
    - Match agenda items to corresponding minutes sections
    - Highlight discrepancies (planned vs actual)
@@ -126,6 +138,7 @@ Based on typical municipal structure (to be verified):
    - Generate video summaries from transcripts
 
 ### Phase 3: Search & Discovery
+
 6. **Full-Text Search**
    - Search across all summaries and documents
    - Filter by date range, meeting type, topic
@@ -135,6 +148,7 @@ Based on typical municipal structure (to be verified):
    - Track topics over time
 
 ### Phase 4: Engagement
+
 8. **Notifications**
    - Email alerts for new meetings
    - Topic-based subscriptions
@@ -169,15 +183,15 @@ Based on typical municipal structure (to be verified):
 
 ### Tech Stack
 
-| Layer | Technology |
-|-------|------------|
-| Frontend | Next.js 16, React 19, Tailwind |
-| Backend | Next.js API Routes |
-| Database | Prisma + SQLite (dev) → PostgreSQL (prod) |
-| AI | Anthropic Claude API |
-| Scraping | Playwright (dynamic), Cheerio (static) |
-| Video | YouTube Data API, youtube-transcript |
-| Deployment | Vercel |
+| Layer      | Technology                                |
+| ---------- | ----------------------------------------- |
+| Frontend   | Next.js 16, React 19, Tailwind            |
+| Backend    | Next.js API Routes                        |
+| Database   | Prisma + SQLite (dev) → PostgreSQL (prod) |
+| AI         | Anthropic Claude API                      |
+| Scraping   | Playwright (dynamic), Cheerio (static)    |
+| Video      | YouTube Data API, youtube-transcript      |
+| Deployment | Vercel                                    |
 
 ### Data Model (Conceptual)
 
@@ -241,6 +255,7 @@ CrossReference
 ## Learning Goals
 
 This project is also a learning exercise for:
+
 - Claude Code workflows and best practices
 - Multi-agent system design and orchestration
 - TDD in TypeScript
