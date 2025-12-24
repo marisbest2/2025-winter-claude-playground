@@ -30,6 +30,7 @@ This document breaks down the PRD into testable, incremental milestones. Each mi
 - [ ] **0.3** Document findings in `docs/DATA_SOURCES.md`
 
 ### Verification
+
 - DATA_SOURCES.md exists with documented URL patterns
 - At least 3 sample URLs for agendas, minutes, videos
 
@@ -59,11 +60,13 @@ This document breaks down the PRD into testable, incremental milestones. Each mi
   ```
 
 ### Tests
+
 - [ ] Type compilation passes
 - [ ] Can create and query a Meeting record
 - [ ] Zod schemas validate correctly
 
 ### Verification
+
 ```bash
 pnpm --filter @teaneck/db db:studio  # Visual inspection
 pnpm -r test  # All tests pass
@@ -78,6 +81,7 @@ pnpm -r test  # All tests pass
 ### Tasks
 
 - [ ] **2.1** Install Playwright
+
   ```bash
   pnpm --filter @teaneck/agents add playwright
   ```
@@ -96,11 +100,13 @@ pnpm -r test  # All tests pass
 - [ ] **2.4** Store scraped data in database
 
 ### Tests
+
 - [ ] Unit test: Parse meeting list HTML (mock data)
 - [ ] Unit test: Extract document URLs from meeting page
 - [ ] Integration test: Scrape one real meeting (can be skipped in CI)
 
 ### Verification
+
 - Can run scraper and see meetings in database
 - At least 5 meetings with agendas stored
 
@@ -130,11 +136,13 @@ pnpm -r test  # All tests pass
 - [ ] **3.4** Store video data in database
 
 ### Tests
+
 - [ ] Unit test: Parse video title to extract meeting date/type
 - [ ] Unit test: Match video to meeting record
 - [ ] Integration test: Fetch transcript for one video
 
 ### Verification
+
 - Can run YouTube scraper and see videos in database
 - At least 3 videos with transcripts stored
 
@@ -167,11 +175,13 @@ pnpm -r test  # All tests pass
 - [ ] **4.5** Store summaries in database
 
 ### Tests
+
 - [ ] Unit test: Summary output matches expected Zod schema
 - [ ] Unit test: Handles empty/malformed input gracefully
 - [ ] Integration test: Generate summary for one real agenda
 
 ### Verification
+
 - Run summarizer on 3 meetings, review output quality manually
 - Summaries stored in database with correct relations
 
@@ -194,11 +204,13 @@ pnpm -r test  # All tests pass
 - [ ] **5.3** Store cross-references in database
 
 ### Tests
+
 - [ ] Unit test: Match obvious pairs (same title)
 - [ ] Unit test: Handle unmatched items
 - [ ] Integration test: Cross-reference one complete meeting
 
 ### Verification
+
 - View cross-references in database
 - Manual review of matching accuracy
 
@@ -216,6 +228,7 @@ pnpm -r test  # All tests pass
   - Error handling and retries
 
 - [ ] **6.2** Create CLI runner
+
   ```bash
   pnpm --filter @teaneck/agents start
   # or
@@ -225,10 +238,12 @@ pnpm -r test  # All tests pass
 - [ ] **6.3** Add job queue (optional, can be simple loop for v1)
 
 ### Tests
+
 - [ ] Integration test: Process one meeting end-to-end
 - [ ] Test: Handles partial failures gracefully
 
 ### Verification
+
 - Run coordinator, see complete meeting data in database
 - Logs show clear pipeline progression
 
@@ -253,10 +268,12 @@ pnpm -r test  # All tests pass
 - [ ] **7.3** Basic styling with Tailwind
 
 ### Tests
+
 - [ ] API route tests with mock data
 - [ ] Component tests for meeting card, summary display
 
 ### Verification
+
 - Visit localhost:3000, see list of meetings
 - Click meeting, see summary
 
@@ -280,10 +297,12 @@ pnpm -r test  # All tests pass
   - Embed or link to original documents
 
 ### Tests
+
 - [ ] Search returns expected results
 - [ ] Cross-reference view renders correctly
 
 ### Verification
+
 - Search for "affordable housing", see relevant meetings
 - View cross-reference for a meeting
 
@@ -313,6 +332,7 @@ pnpm -r test  # All tests pass
   - Run daily/weekly
 
 ### Verification
+
 - Site accessible at public URL
 - New meeting appears within 48 hours of publication
 
@@ -405,13 +425,13 @@ M1 (Schema) ◄────────────────────┐
 
 ## Risk Mitigation
 
-| Risk | Mitigation |
-|------|------------|
-| IQM2 blocks scraping | Use Playwright with human-like delays, respect robots.txt |
-| YouTube API quota limits | Cache aggressively, only fetch new videos |
-| Claude API costs | Summarize incrementally, cache results |
-| PDF parsing failures | Fall back to Claude vision for complex PDFs |
-| Video transcripts unavailable | Plan for Whisper fallback |
+| Risk                          | Mitigation                                                |
+| ----------------------------- | --------------------------------------------------------- |
+| IQM2 blocks scraping          | Use Playwright with human-like delays, respect robots.txt |
+| YouTube API quota limits      | Cache aggressively, only fetch new videos                 |
+| Claude API costs              | Summarize incrementally, cache results                    |
+| PDF parsing failures          | Fall back to Claude vision for complex PDFs               |
+| Video transcripts unavailable | Plan for Whisper fallback                                 |
 
 ---
 

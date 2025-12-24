@@ -5,6 +5,7 @@
 A civic transparency tool that makes Teaneck Township (NJ) government meetings accessible. Crawls official sources, generates AI summaries, and cross-references agendas with minutes and video.
 
 **Documentation:**
+
 - [PRD](docs/PRD.md) - Product requirements and vision
 - [Project Plan](docs/PROJECT_PLAN.md) - Milestones and implementation plan
 
@@ -80,6 +81,7 @@ YOUTUBE_API_KEY=...  # Optional until Milestone 3
 ```
 
 **Never paste API keys in chat.** Use:
+
 ```bash
 read -s KEY && echo "ANTHROPIC_API_KEY=$KEY" >> .env.local
 ```
@@ -101,12 +103,14 @@ See [PROJECT_PLAN.md](docs/PROJECT_PLAN.md) for full roadmap.
 ## Claude Code Permissions
 
 Claude has full read/write access to:
+
 - All source code in `apps/`, `services/`, `packages/`
 - Documentation in `docs/`
 - Configuration files (package.json, tsconfig, etc.)
 - Git operations (branches, commits, PRs)
 
 Claude should NOT:
+
 - Commit `.env*` files
 - Push directly to main (use PRs)
 - Run destructive git commands without asking

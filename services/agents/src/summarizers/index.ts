@@ -1,10 +1,10 @@
 // Summarizer agents - create summaries using Claude
 export class SummarizerAgent {
-  async summarizeAgenda(content: string) {
+  async summarizeAgenda(_content: string) {
     console.log('Summarizing agenda')
   }
 
-  async summarizeVideo(videoId: string) {
+  async summarizeVideo(_videoId: string) {
     console.log('Summarizing video')
   }
 }
