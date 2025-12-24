@@ -1,11 +1,11 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest'
-import { IQM2Scraper } from './iqm2'
+import { TeaneckIQM2Scraper } from './iqm2'
 
-describe('IQM2Scraper', () => {
-  let scraper: IQM2Scraper
+describe('TeaneckIQM2Scraper', () => {
+  let scraper: TeaneckIQM2Scraper
 
   beforeAll(async () => {
-    scraper = new IQM2Scraper()
+    scraper = new TeaneckIQM2Scraper()
     await scraper.init()
   }, 30000) // 30s timeout for browser startup
 

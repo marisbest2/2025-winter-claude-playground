@@ -1,26 +1,18 @@
 import { chromium, Browser, Page } from 'playwright'
+import type {
+  Board,
+  Meeting,
+  MeetingDocument,
+  MeetingSystemScraper,
+} from '../types'
 
-export interface Board {
-  id: string
-  name: string
-}
+export abstract class IQM2BaseScraper implements MeetingSystemScraper {
+  readonly systemType = 'iqm2'
 
-export interface Meeting {
-  id: string
-  date: string
-  title: string
-}
+  protected abstract readonly baseUrl: string
 
-export interface MeetingDocument {
-  type: 'agenda' | 'minutes' | 'video'
-  url: string
-  title: string
-}
-
-export class IQM2Scraper {
-  private browser: Browser | null = null
-  private page: Page | null = null
-  private baseUrl = 'https://teanecktownnj.iqm2.com/Citizens'
+  protected browser: Browser | null = null
+  protected page: Page | null = null
 
   async init(): Promise<void> {
     this.browser = await chromium.launch({
@@ -139,7 +131,7 @@ export class IQM2Scraper {
 
       if (href && text) {
         // Extract meeting ID from URL
-        const idMatch = href.match(/[Mm]eeting[=\/](\d+)/)
+        const idMatch = href.match(/[Mm]eeting[=/](\d+)/)
         const id = idMatch?.[1]
 
         // Try to extract date from text
@@ -151,6 +143,7 @@ export class IQM2Scraper {
             id,
             date,
             title: text.trim(),
+            boardId,
           })
         }
       }
