@@ -11,7 +11,7 @@
  */
 
 import type { ModelMessage } from 'ai'
-import { researchAgent, memory } from './mastra'
+import { getResearchAgent, memory, getMcpToolsets } from './mastra'
 
 /**
  * Response from askQuestion - AI SDK compatible
@@ -43,20 +43,29 @@ export interface StreamResponse {
 
 /**
  * Ask a question about government records
+ *
+ * Connects to MCP server for tool access (government records tools).
  */
 export async function askQuestion(
   question: string,
   options?: {
     threadId?: string
     resourceId?: string
+    /** Skip MCP tools (for testing or simple queries) */
+    skipTools?: boolean
   }
 ): Promise<GenerateResponse> {
   const threadId = options?.threadId ?? generateThreadId()
   const resourceId = options?.resourceId ?? 'default-user'
 
-  const response = await researchAgent.generate(question, {
+  // Get MCP toolsets for government records tools
+  const toolsets = options?.skipTools ? undefined : await getMcpToolsets()
+
+  const agent = await getResearchAgent()
+  const response = await agent.generate(question, {
     threadId,
     resourceId,
+    toolsets,
   })
 
   return {
@@ -75,20 +84,29 @@ export async function askQuestion(
 
 /**
  * Ask a question with streaming response
+ *
+ * Connects to MCP server for tool access (government records tools).
  */
 export async function askQuestionStream(
   question: string,
   options?: {
     threadId?: string
     resourceId?: string
+    /** Skip MCP tools (for testing or simple queries) */
+    skipTools?: boolean
   }
 ): Promise<StreamResponse> {
   const threadId = options?.threadId ?? generateThreadId()
   const resourceId = options?.resourceId ?? 'default-user'
 
-  const { textStream } = await researchAgent.stream(question, {
+  // Get MCP toolsets for government records tools
+  const toolsets = options?.skipTools ? undefined : await getMcpToolsets()
+
+  const agent = await getResearchAgent()
+  const { textStream } = await agent.stream(question, {
     threadId,
     resourceId,
+    toolsets,
   })
 
   return {

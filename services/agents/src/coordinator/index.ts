@@ -5,3 +5,4 @@
  */
 
 export * from './agent'
+export { getResearchAgent, getMcpToolsets, mcpClient } from './mastra'
