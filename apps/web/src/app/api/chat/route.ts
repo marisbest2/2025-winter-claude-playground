@@ -12,6 +12,7 @@ import {
   convertToModelMessages,
   consumeStream,
   UIMessage,
+  stepCountIs,
 } from 'ai'
 import { anthropic } from '@ai-sdk/anthropic'
 import { z } from 'zod'
@@ -203,6 +204,7 @@ export async function POST(request: Request) {
       system: SYSTEM_PROMPT,
       messages: await convertToModelMessages(messages),
       tools: governmentTools,
+      stopWhen: stepCountIs(5), // Allow up to 5 steps (tool calls and responses)
       abortSignal: request.signal,
     })
 
