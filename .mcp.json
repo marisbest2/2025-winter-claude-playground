@@ -11,6 +11,12 @@
       "command": "npx",
       "args": ["-y", "@mastra/mcp-docs-server"],
       "env": {}
+    },
+    "government-records": {
+      "type": "stdio",
+      "command": "pnpm",
+      "args": ["--filter", "@teaneck/agents", "mcp:serve"],
+      "env": {}
     }
   }
 }

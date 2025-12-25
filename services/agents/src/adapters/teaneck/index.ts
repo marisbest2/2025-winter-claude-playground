@@ -5,6 +5,8 @@
  * Data sources:
  * - IQM2 portal for meetings, agendas, minutes
  * - YouTube for video recordings and transcripts
+ *
+ * Currently returns stub data. Real implementation in Milestone 3.
  */
 
 import type {
@@ -15,6 +17,15 @@ import type {
   MeetingDocument,
 } from '../types'
 
+import {
+  STUB_BOARDS,
+  STUB_MEETING_DETAILS,
+  STUB_TRANSCRIPTS,
+  getMeetingsForBoard,
+  searchMeetingsByQuery,
+  searchDocumentsByQuery,
+} from './stub-data'
+
 const IQM2_BASE_URL = 'https://teanecktownnj.iqm2.com/Citizens'
 const YOUTUBE_CHANNEL = '@TeaneckNJ07666'
 
@@ -22,9 +33,8 @@ export class TeaneckAdapter implements MunicipalityAdapter {
   readonly name = 'Teaneck Township'
   readonly jurisdiction = 'municipal'
 
-  // TODO: Implement with Playwright browser instance
   async init(): Promise<void> {
-    console.log(`[TeaneckAdapter] Initializing...`)
+    console.log(`[TeaneckAdapter] Initializing (stub mode)...`)
     console.log(`  IQM2 Portal: ${IQM2_BASE_URL}`)
     console.log(`  YouTube: ${YOUTUBE_CHANNEL}`)
   }
@@ -34,49 +44,47 @@ export class TeaneckAdapter implements MunicipalityAdapter {
   }
 
   async listBoards(): Promise<Board[]> {
-    // TODO: Implement IQM2 board scraping
-    // See previous implementation in scrapers/iqm2/base.ts
-    console.log(`[TeaneckAdapter] listBoards() - stub`)
-    return []
+    console.log(`[TeaneckAdapter] listBoards()`)
+    return STUB_BOARDS
   }
 
   async listMeetings(
     boardId: string,
-    _options?: { limit?: number }
+    options?: { limit?: number }
   ): Promise<Meeting[]> {
-    // TODO: Implement IQM2 meeting scraping
-    console.log(`[TeaneckAdapter] listMeetings(${boardId}) - stub`)
-    return []
+    console.log(`[TeaneckAdapter] listMeetings(${boardId}, ${JSON.stringify(options)})`)
+    return getMeetingsForBoard(boardId, options)
   }
 
   async getMeetingDetails(meetingId: string): Promise<MeetingDetails> {
-    // TODO: Implement IQM2 meeting details + YouTube matching
-    console.log(`[TeaneckAdapter] getMeetingDetails(${meetingId}) - stub`)
+    console.log(`[TeaneckAdapter] getMeetingDetails(${meetingId})`)
+    const details = STUB_MEETING_DETAILS[meetingId]
+    if (details) {
+      return details
+    }
+    // Return minimal details for unknown meeting IDs
     return {
       id: meetingId,
       date: '',
-      title: '',
+      title: 'Meeting not found',
       boardId: '',
       documents: [],
     }
   }
 
   async getTranscript(meetingId: string): Promise<string | null> {
-    // TODO: Implement YouTube transcript fetching
-    console.log(`[TeaneckAdapter] getTranscript(${meetingId}) - stub`)
-    return null
+    console.log(`[TeaneckAdapter] getTranscript(${meetingId})`)
+    return STUB_TRANSCRIPTS[meetingId] || null
   }
 
   async searchMeetings(query: string): Promise<Meeting[]> {
-    // TODO: Implement search
-    console.log(`[TeaneckAdapter] searchMeetings(${query}) - stub`)
-    return []
+    console.log(`[TeaneckAdapter] searchMeetings(${query})`)
+    return searchMeetingsByQuery(query)
   }
 
   async searchDocuments(query: string): Promise<MeetingDocument[]> {
-    // TODO: Implement document search
-    console.log(`[TeaneckAdapter] searchDocuments(${query}) - stub`)
-    return []
+    console.log(`[TeaneckAdapter] searchDocuments(${query})`)
+    return searchDocumentsByQuery(query)
   }
 }
 
