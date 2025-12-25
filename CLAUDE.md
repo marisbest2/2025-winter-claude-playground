@@ -168,6 +168,14 @@ For each new feature:
 - Create PR: `gh pr create`
 - Merge: `gh pr merge --squash`
 
+### 8. Retrospective & Improvements
+
+- Suggest improvements to this workflow itself
+- Add any new Skills (slash commands) that would help future work
+- Update documentation (CLAUDE.md, PRD.md, etc.) based on lessons learned
+- Note any patterns or utilities that should be extracted
+- **Check in with user** to review suggestions
+
 ## Current Status
 
 **Active Milestone:** 2B - Mastra + MCP Architecture
