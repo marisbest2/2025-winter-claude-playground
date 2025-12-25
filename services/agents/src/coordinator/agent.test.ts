@@ -123,7 +123,9 @@ describe('askQuestion', () => {
 
     const { askQuestion } = await import('./agent')
 
-    await expect(askQuestion('Test')).rejects.toThrow('Database connection failed')
+    await expect(askQuestion('Test')).rejects.toThrow(
+      'Database connection failed'
+    )
   })
 })
 

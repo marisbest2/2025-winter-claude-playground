@@ -13,6 +13,9 @@
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.71.2",
+    "@mastra/core": "^0.24.9",
+    "@mastra/libsql": "^0.16.4",
+    "@mastra/memory": "^0.15.13",
     "@teaneck/db": "workspace:*",
     "@teaneck/shared": "workspace:*",
     "cheerio": "^1.1.2",

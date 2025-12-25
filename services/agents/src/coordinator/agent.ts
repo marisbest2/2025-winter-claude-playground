@@ -8,12 +8,7 @@
  * - Response generation with Claude
  */
 
-import { deepResearch } from '../research'
-
-// TODO: Import from @mastra/core once installed
-// import { Agent } from '@mastra/core/agent'
-// import { Memory } from '@mastra/memory'
-// import { PostgresStore } from '@mastra/pg'
+import { researchAgent, memory } from './mastra'
 
 export interface AgentResponse {
   answer: string
@@ -22,49 +17,108 @@ export interface AgentResponse {
   sources: Array<{ title: string; url?: string }>
 }
 
+export interface StreamingResponse {
+  stream: AsyncIterable<string>
+  threadId: string
+}
+
 /**
  * Ask a question about government records
- *
- * This is the main entry point for the deep research agent.
  */
 export async function askQuestion(
   question: string,
   options?: {
     threadId?: string
-    userId?: string
-    municipality?: string
+    resourceId?: string
   }
 ): Promise<AgentResponse> {
-  const municipality = options?.municipality ?? 'teaneck'
-  const threadId = options?.threadId ?? `thread-${Date.now()}`
+  const threadId = options?.threadId ?? generateThreadId()
+  const resourceId = options?.resourceId ?? 'default-user'
 
-  console.log(`[Agent] askQuestion("${question}")`)
-  console.log(`  Municipality: ${municipality}`)
-  console.log(`  Thread: ${threadId}`)
+  const response = await researchAgent.generate(question, {
+    threadId,
+    resourceId,
+  })
 
-  // TODO: Replace with Mastra agent once installed
-  // For now, use the deep research pipeline directly
-
-  const result = await deepResearch(question, municipality)
+  // Extract tool names from tool calls if present
+  const toolsUsed: string[] = []
+  if (response.toolCalls && Array.isArray(response.toolCalls)) {
+    for (const call of response.toolCalls) {
+      const name =
+        (call as { name?: string }).name ||
+        (call as { toolName?: string }).toolName
+      if (name) {
+        toolsUsed.push(name)
+      }
+    }
+  }
 
   return {
-    answer: result.answer,
+    answer: response.text,
     threadId,
-    toolsUsed: [], // TODO: Track from MCP calls
-    sources: result.sources.map(s => ({ title: s.title, url: s.url })),
+    toolsUsed,
+    sources: [], // TODO: Extract from tool results when MCP tools added
   }
 }
 
 /**
- * Create a configured Mastra agent
- *
- * TODO: Implement once @mastra/core is installed
+ * Ask a question with streaming response
  */
-export async function createAgent() {
-  console.log(`[Agent] createAgent() - stub, waiting for Mastra installation`)
+export async function askQuestionStream(
+  question: string,
+  options?: {
+    threadId?: string
+    resourceId?: string
+  }
+): Promise<StreamingResponse> {
+  const threadId = options?.threadId ?? generateThreadId()
+  const resourceId = options?.resourceId ?? 'default-user'
 
-  // TODO: Return configured Agent instance
-  // See implementation plan in .claude/plans/tingly-petting-snail.md
+  const { textStream } = await researchAgent.stream(question, {
+    threadId,
+    resourceId,
+  })
 
-  return null
+  return {
+    stream: textStream,
+    threadId,
+  }
+}
+
+/**
+ * Create a new conversation thread
+ */
+export async function createThread(): Promise<{ threadId: string }> {
+  return { threadId: generateThreadId() }
+}
+
+/**
+ * Get conversation history for a thread
+ */
+export async function getThreadHistory(
+  threadId: string
+): Promise<Array<{ role: string; content: string }>> {
+  const result = await memory.query({
+    threadId,
+    resourceId: 'default-user',
+  })
+
+  if (!result?.messages) {
+    return []
+  }
+
+  return result.messages.map((msg: { role: string; content: unknown }) => ({
+    role: msg.role,
+    content:
+      typeof msg.content === 'string'
+        ? msg.content
+        : JSON.stringify(msg.content),
+  }))
+}
+
+/**
+ * Generate a unique thread ID
+ */
+function generateThreadId(): string {
+  return `thread-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`
 }
