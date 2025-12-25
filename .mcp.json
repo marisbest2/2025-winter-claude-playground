@@ -1,0 +1,16 @@
+{
+  "mcpServers": {
+    "context7": {
+      "type": "stdio",
+      "command": "npx",
+      "args": ["-y", "@upstash/context7-mcp"],
+      "env": {}
+    },
+    "mastra-docs": {
+      "type": "stdio",
+      "command": "npx",
+      "args": ["-y", "@mastra/mcp-docs-server"],
+      "env": {}
+    }
+  }
+}
