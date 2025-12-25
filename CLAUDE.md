@@ -1,29 +1,51 @@
-# Teaneck Meeting Tracker
+# Government Records Deep Research Agent
 
 ## Project Overview
 
-A civic transparency tool that makes Teaneck Township (NJ) government meetings accessible. Crawls official sources, generates AI summaries, and cross-references agendas with minutes and video.
+A **deep research agent** for government records that helps lawyers, journalists, and engaged citizens investigate local government decisions across multiple jurisdictions and data sources.
+
+Unlike simple search, this agent:
+
+- **Decomposes complex queries** into sub-questions
+- **Retrieves from multiple sources** (meetings, documents, transcripts)
+- **Synthesizes answers with citations**
+- **Handles contradictions** between sources
+- **Remembers context** across conversations
 
 **Documentation:**
 
 - [PRD](docs/PRD.md) - Product requirements and vision
-- [Project Plan](docs/PROJECT_PLAN.md) - Milestones and implementation plan
+- [Project Plan](docs/PROJECT_PLAN.md) - Milestones and architecture
+- [Deep Research Notes](docs/DEEP_RESEARCH_NOTES.md) - Patterns from reference implementations
 
 ## Architecture
 
 ```
 apps/
-  web/                 # Next.js frontend
+  web/                     # Next.js frontend
+
 services/
-  agents/              # Multi-agent orchestration
-    coordinator/       # Main orchestrator
-    scrapers/          # IQM2, YouTube scrapers
-    summarizers/       # AI summarization
-    cross-reference/   # Document matching
-  python/              # Reserved for Python services
+  agents/
+    src/
+      mcp/                 # Domain-driven MCP server
+        government-records.ts   # list_boards, search_meetings, etc.
+
+      adapters/            # Municipality-specific backends
+        teaneck/           # Teaneck (IQM2 + YouTube)
+        # future: other municipalities
+
+      research/            # Deep research components
+        planner.ts         # Query decomposition
+        researcher.ts      # Execute research plan
+        synthesizer.ts     # Combine findings with citations
+
+      coordinator/         # Mastra agent orchestration
+
+  python/                  # Reserved for Python services
+
 packages/
-  shared/              # Shared types and utilities
-  db/                  # Prisma database client
+  shared/                  # Shared types and utilities
+  db/                      # Prisma database client
 ```
 
 ## Data Sources
@@ -35,8 +57,10 @@ packages/
 ## Tech Stack
 
 - TypeScript + Next.js 16 + React 19 + Tailwind
+- Mastra (agent orchestration, memory, tool use)
+- MCP (Model Context Protocol) for domain-driven tools
 - Prisma + SQLite (dev) → PostgreSQL (prod)
-- Anthropic Claude API for summarization
+- Anthropic Claude API
 - Playwright for dynamic scraping
 - pnpm workspaces monorepo
 
@@ -96,18 +120,13 @@ read -s KEY && echo "ANTHROPIC_API_KEY=$KEY" >> .env.local
 
 ## Current Status
 
-**Active Milestone:** 0 - Data Source Exploration
+**Active Milestone:** 2B - Mastra + MCP Architecture
 
 See [PROJECT_PLAN.md](docs/PROJECT_PLAN.md) for full roadmap.
 
 ## Claude Code Permissions
 
-Claude has full read/write access to:
-
-- All source code in `apps/`, `services/`, `packages/`
-- Documentation in `docs/`
-- Configuration files (package.json, tsconfig, etc.)
-- Git operations (branches, commits, PRs)
+Claude has **full read/write access** to all files in this repository.
 
 Claude should NOT:
 
