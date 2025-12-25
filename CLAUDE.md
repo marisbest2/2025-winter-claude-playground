@@ -18,6 +18,67 @@ Unlike simple search, this agent:
 - [Project Plan](docs/PROJECT_PLAN.md) - Milestones and architecture
 - [Deep Research Notes](docs/DEEP_RESEARCH_NOTES.md) - Patterns from reference implementations
 
+---
+
+## ⚠️ IMPORTANT: Feature Development Workflow
+
+**Follow this workflow for EVERY new feature. Do not skip steps.**
+
+### 1. Identify Next Item
+
+- Check [PROJECT_PLAN.md](docs/PROJECT_PLAN.md) for the current milestone and next item
+- Create a feature branch: `git checkout -b feature/description`
+- Commit and push throughout development
+
+### 2. Flesh Out User Stories
+
+- Expand the user stories from PROJECT_PLAN.md with details
+- Add testing stories (how we'll verify it works)
+- Identify corner cases and clarifications needed
+- **Check in with user** before proceeding
+
+### 3. Create Implementation Plan
+
+- Design the technical approach
+- Identify files to create/modify
+- Note dependencies and risks
+- **Check in with user** and iterate on the plan
+
+### 4. Build Tests First (TDD)
+
+- Write tests based on testing stories
+- Tests should fail initially (red)
+- Commit the tests
+
+### 5. Build Features
+
+- Implement until tests pass (green)
+- Commit working code
+- Run full test suite
+
+### 6. User Testing
+
+- **Check in with user** to test together
+- Demo the feature
+- Address any issues found
+
+### 7. Cleanup & Merge
+
+- Clean up code, add comments if needed
+- Update PROJECT_PLAN.md to mark item complete
+- Commit final changes
+- Create PR and merge via squash (use git directly if `gh` unavailable)
+
+### 8. Retrospective & Improvements
+
+- Suggest improvements to this workflow itself
+- Add any new Skills (slash commands) that would help future work
+- Update documentation (CLAUDE.md, PRD.md, etc.) based on lessons learned
+- Note any patterns or utilities that should be extracted
+- **Check in with user** to review suggestions
+
+---
+
 ## Architecture
 
 ```
@@ -64,18 +125,6 @@ packages/
 - Playwright for dynamic scraping
 - pnpm workspaces monorepo
 
-## Git Workflow
-
-**Always follow gitflow with squash merges:**
-
-1. `git checkout -b feature/description` (or `milestone-X/description`)
-2. Make commits, push branch
-3. `gh pr create --title "..." --body "..."`
-4. `gh pr merge <number> --squash`
-5. `git checkout main && git pull && git branch -d feature/description`
-
-**Branch prefixes:** `feature/`, `fix/`, `docs/`, `milestone-X/`
-
 ## Commands
 
 ```bash
@@ -118,63 +167,17 @@ read -s KEY && echo "ANTHROPIC_API_KEY=$KEY" >> .env.local
 - Zod for runtime validation
 - TDD where possible (write tests first)
 
-## Feature Development Workflow
+## Git Workflow
 
-For each new feature:
+**Always follow gitflow with squash merges:**
 
-### 1. Identify Next Item
+1. `git checkout -b feature/description` (or `milestone-X/description`)
+2. Make commits, push branch
+3. `gh pr create --title "..." --body "..."` (or use GitHub UI if `gh` unavailable)
+4. `gh pr merge <number> --squash` (or merge via GitHub UI)
+5. `git checkout main && git pull && git branch -d feature/description`
 
-- Check [PROJECT_PLAN.md](docs/PROJECT_PLAN.md) for the current milestone and next item
-- Create a feature branch: `git checkout -b feature/description`
-- Commit and push throughout development
-
-### 2. Flesh Out User Stories
-
-- Expand the user stories from PROJECT_PLAN.md with details
-- Add testing stories (how we'll verify it works)
-- Identify corner cases and clarifications needed
-- **Check in with user** before proceeding
-
-### 3. Create Implementation Plan
-
-- Design the technical approach
-- Identify files to create/modify
-- Note dependencies and risks
-- **Check in with user** and iterate on the plan
-
-### 4. Build Tests First (TDD)
-
-- Write tests based on testing stories
-- Tests should fail initially (red)
-- Commit the tests
-
-### 5. Build Features
-
-- Implement until tests pass (green)
-- Commit working code
-- Run full test suite
-
-### 6. User Testing
-
-- **Check in with user** to test together
-- Demo the feature
-- Address any issues found
-
-### 7. Cleanup & Merge
-
-- Clean up code, add comments if needed
-- Update PROJECT_PLAN.md to mark item complete
-- Commit final changes
-- Create PR: `gh pr create`
-- Merge: `gh pr merge --squash`
-
-### 8. Retrospective & Improvements
-
-- Suggest improvements to this workflow itself
-- Add any new Skills (slash commands) that would help future work
-- Update documentation (CLAUDE.md, PRD.md, etc.) based on lessons learned
-- Note any patterns or utilities that should be extracted
-- **Check in with user** to review suggestions
+**Branch prefixes:** `feature/`, `fix/`, `docs/`, `milestone-X/`
 
 ## Parallel Work
 
