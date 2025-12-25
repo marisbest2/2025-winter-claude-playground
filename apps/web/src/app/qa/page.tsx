@@ -1,4 +1,4 @@
-import QAInterface from '../components/QAInterface'
+import Chat from '../components/Chat'
 
 export const metadata = {
   title: 'Ask About Meetings - Teaneck Tracker',
@@ -6,5 +6,5 @@ export const metadata = {
 }
 
 export default function QAPage() {
-  return <QAInterface />
+  return <Chat />
 }

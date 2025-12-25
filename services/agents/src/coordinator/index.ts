@@ -5,3 +5,6 @@
  */
 
 export * from './agent'
+
+// Export raw Mastra agent for direct streaming integration
+export { researchAgent, memory } from './mastra'

@@ -16,6 +16,8 @@ export {
   askQuestionStream,
   createThread,
   getThreadHistory,
+  researchAgent,
+  memory,
 } from './coordinator'
 
 // Deep research pipeline
