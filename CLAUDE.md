@@ -176,6 +176,33 @@ For each new feature:
 - Note any patterns or utilities that should be extracted
 - **Check in with user** to review suggestions
 
+## Parallel Work
+
+This project supports parallel development across multiple Claude Code sessions.
+
+**How to work in parallel:**
+
+1. Check [PROJECT_PLAN.md](docs/PROJECT_PLAN.md) for the task dependency graph
+2. Pick a task that has no unfinished dependencies
+3. Create a feature branch: `git checkout -b feature/task-name`
+4. Work independently - other sessions handle other tasks
+5. Create PR when done, merge via squash
+
+**Interfaces for parallel work:**
+
+| Interface                | Best For                                |
+| ------------------------ | --------------------------------------- |
+| **Web** (claude.ai/code) | Async parallel tasks, no local setup    |
+| **CLI + Worktrees**      | Local parallel sessions                 |
+| **Cursor/VS Code**       | IDE-integrated, one worktree per window |
+
+**Coordination rules:**
+
+- Each session works on ONE task at a time
+- Check `git branch -r` before starting to avoid conflicts
+- Communicate via PR descriptions and comments
+- Integration tasks (like 2B.5) wait for parallel tasks to merge
+
 ## Current Status
 
 **Active Milestone:** 2B - Mastra + MCP Architecture
