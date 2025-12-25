@@ -183,10 +183,20 @@ This project supports parallel development across multiple Claude Code sessions.
 **How to work in parallel:**
 
 1. Check [PROJECT_PLAN.md](docs/PROJECT_PLAN.md) for the task dependency graph
-2. Pick a task that has no unfinished dependencies
-3. Create a feature branch: `git checkout -b feature/task-name`
-4. Work independently - other sessions handle other tasks
-5. Create PR when done, merge via squash
+2. Check what's already claimed:
+   ```bash
+   git fetch && git branch -r | grep feature/
+   ```
+3. Pick an unclaimed task with no unfinished dependencies
+4. Claim it with a branch name matching the task ID:
+   ```bash
+   git checkout -b feature/2B.2-mcp-server  # Task 2B.2
+   ```
+5. Push immediately to signal you've claimed it:
+   ```bash
+   git push -u origin feature/2B.2-mcp-server
+   ```
+6. Work independently, create PR when done, merge via squash
 
 **Interfaces for parallel work:**
 
@@ -199,9 +209,16 @@ This project supports parallel development across multiple Claude Code sessions.
 **Coordination rules:**
 
 - Each session works on ONE task at a time
-- Check `git branch -r` before starting to avoid conflicts
-- Communicate via PR descriptions and comments
-- Integration tasks (like 2B.5) wait for parallel tasks to merge
+- Branch names signal ownership: `feature/2B.2-*` = task 2B.2 is claimed
+- Check before starting:
+  ```bash
+  git fetch
+  git branch -r | grep feature/     # See claimed tasks
+  git log --oneline main..origin/main  # See recently merged
+  ```
+- A task's dependencies are "done" when merged to main
+- Integration tasks (like 2B.5) wait for all parallel tasks to merge first
+- If two sessions accidentally claim the same task, coordinate via PR comments
 
 ## Current Status
 
