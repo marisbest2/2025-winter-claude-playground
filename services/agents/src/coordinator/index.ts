@@ -1,6 +1,7 @@
-// Coordinator agent - orchestrates other agents
-export class CoordinatorAgent {
-  async orchestrate() {
-    console.log('Coordinator agent initialized')
-  }
-}
+/**
+ * Coordinator
+ *
+ * Main entry point for the deep research agent.
+ */
+
+export * from './agent'
