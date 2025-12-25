@@ -2,6 +2,7 @@
  * Mastra Agent Tests
  *
  * TDD tests for the government records research agent.
+ * Uses AI SDK types for compatibility.
  */
 
 import { describe, it, expect, vi, beforeEach } from 'vitest'
@@ -69,22 +70,33 @@ describe('askQuestion', () => {
     mockGenerate.mockResolvedValue({
       text: 'Test response about government records.',
       toolCalls: [],
+      usage: { inputTokens: 10, outputTokens: 20, totalTokens: 30 },
     })
   })
 
-  it('returns AgentResponse with answer, threadId, toolsUsed, sources', async () => {
+  it('returns GenerateResponse with text, threadId, toolCalls', async () => {
     const { askQuestion } = await import('./agent')
 
     const response = await askQuestion('What boards exist in Teaneck?')
 
-    expect(response).toHaveProperty('answer')
+    expect(response).toHaveProperty('text')
     expect(response).toHaveProperty('threadId')
-    expect(response).toHaveProperty('toolsUsed')
-    expect(response).toHaveProperty('sources')
-    expect(typeof response.answer).toBe('string')
+    expect(response).toHaveProperty('toolCalls')
+    expect(typeof response.text).toBe('string')
     expect(typeof response.threadId).toBe('string')
-    expect(Array.isArray(response.toolsUsed)).toBe(true)
-    expect(Array.isArray(response.sources)).toBe(true)
+    expect(Array.isArray(response.toolCalls)).toBe(true)
+  })
+
+  it('includes usage stats when available', async () => {
+    const { askQuestion } = await import('./agent')
+
+    const response = await askQuestion('Test')
+
+    expect(response.usage).toEqual({
+      promptTokens: 10,
+      completionTokens: 20,
+      totalTokens: 30,
+    })
   })
 
   it('uses provided threadId', async () => {
@@ -140,22 +152,22 @@ describe('askQuestionStream', () => {
     })
   })
 
-  it('returns stream and threadId', async () => {
+  it('returns StreamResponse with textStream and threadId', async () => {
     const { askQuestionStream } = await import('./agent')
 
     const response = await askQuestionStream('Test question')
 
-    expect(response).toHaveProperty('stream')
+    expect(response).toHaveProperty('textStream')
     expect(response).toHaveProperty('threadId')
     expect(typeof response.threadId).toBe('string')
   })
 
-  it('stream yields text chunks', async () => {
+  it('textStream yields text chunks', async () => {
     const { askQuestionStream } = await import('./agent')
 
-    const { stream } = await askQuestionStream('Test')
+    const { textStream } = await askQuestionStream('Test')
     const chunks: string[] = []
-    for await (const chunk of stream) {
+    for await (const chunk of textStream) {
       chunks.push(chunk)
     }
 
@@ -188,7 +200,7 @@ describe('getThreadHistory', () => {
     vi.clearAllMocks()
   })
 
-  it('returns array of messages', async () => {
+  it('returns CoreMessage[] array', async () => {
     mockQuery.mockResolvedValue({
       messages: [
         { role: 'user', content: 'Hello' },
@@ -203,6 +215,7 @@ describe('getThreadHistory', () => {
     expect(Array.isArray(history)).toBe(true)
     expect(history).toHaveLength(2)
     expect(history[0]).toEqual({ role: 'user', content: 'Hello' })
+    expect(history[1]).toEqual({ role: 'assistant', content: 'Hi there' })
   })
 
   it('returns empty array for non-existent thread', async () => {
@@ -213,5 +226,18 @@ describe('getThreadHistory', () => {
     const history = await getThreadHistory('non-existent')
 
     expect(history).toEqual([])
+  })
+
+  it('accepts optional resourceId parameter', async () => {
+    mockQuery.mockResolvedValue({ messages: [] })
+
+    const { getThreadHistory } = await import('./agent')
+
+    await getThreadHistory('thread-123', 'custom-user')
+
+    expect(mockQuery).toHaveBeenCalledWith({
+      threadId: 'thread-123',
+      resourceId: 'custom-user',
+    })
   })
 })

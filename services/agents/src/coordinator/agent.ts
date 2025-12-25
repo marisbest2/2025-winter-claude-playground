@@ -6,19 +6,38 @@
  * - Multi-turn conversation memory
  * - Tool orchestration via MCP
  * - Response generation with Claude
+ *
+ * Types are aligned with Vercel AI SDK for UI compatibility.
  */
 
+import type { ModelMessage } from 'ai'
 import { researchAgent, memory } from './mastra'
 
-export interface AgentResponse {
-  answer: string
+/**
+ * Response from askQuestion - AI SDK compatible
+ */
+export interface GenerateResponse {
+  /** The generated text response */
+  text: string
+  /** Thread ID for conversation continuity */
   threadId: string
-  toolsUsed: string[]
-  sources: Array<{ title: string; url?: string }>
+  /** Tool calls made during generation (raw from Mastra) */
+  toolCalls: unknown[]
+  /** Token usage stats */
+  usage?: {
+    promptTokens: number
+    completionTokens: number
+    totalTokens: number
+  }
 }
 
-export interface StreamingResponse {
-  stream: AsyncIterable<string>
+/**
+ * Response from askQuestionStream - AI SDK compatible
+ */
+export interface StreamResponse {
+  /** Async iterable of text chunks */
+  textStream: AsyncIterable<string>
+  /** Thread ID for conversation continuity */
   threadId: string
 }
 
@@ -31,7 +50,7 @@ export async function askQuestion(
     threadId?: string
     resourceId?: string
   }
-): Promise<AgentResponse> {
+): Promise<GenerateResponse> {
   const threadId = options?.threadId ?? generateThreadId()
   const resourceId = options?.resourceId ?? 'default-user'
 
@@ -40,24 +59,17 @@ export async function askQuestion(
     resourceId,
   })
 
-  // Extract tool names from tool calls if present
-  const toolsUsed: string[] = []
-  if (response.toolCalls && Array.isArray(response.toolCalls)) {
-    for (const call of response.toolCalls) {
-      const name =
-        (call as { name?: string }).name ||
-        (call as { toolName?: string }).toolName
-      if (name) {
-        toolsUsed.push(name)
-      }
-    }
-  }
-
   return {
-    answer: response.text,
+    text: response.text,
     threadId,
-    toolsUsed,
-    sources: [], // TODO: Extract from tool results when MCP tools added
+    toolCalls: response.toolCalls ?? [],
+    usage: response.usage
+      ? {
+          promptTokens: response.usage.inputTokens ?? 0,
+          completionTokens: response.usage.outputTokens ?? 0,
+          totalTokens: response.usage.totalTokens ?? 0,
+        }
+      : undefined,
   }
 }
 
@@ -70,7 +82,7 @@ export async function askQuestionStream(
     threadId?: string
     resourceId?: string
   }
-): Promise<StreamingResponse> {
+): Promise<StreamResponse> {
   const threadId = options?.threadId ?? generateThreadId()
   const resourceId = options?.resourceId ?? 'default-user'
 
@@ -80,7 +92,7 @@ export async function askQuestionStream(
   })
 
   return {
-    stream: textStream,
+    textStream,
     threadId,
   }
 }
@@ -94,26 +106,31 @@ export async function createThread(): Promise<{ threadId: string }> {
 
 /**
  * Get conversation history for a thread
+ * Returns ModelMessage[] for AI SDK compatibility
  */
 export async function getThreadHistory(
-  threadId: string
-): Promise<Array<{ role: string; content: string }>> {
+  threadId: string,
+  resourceId: string = 'default-user'
+): Promise<ModelMessage[]> {
   const result = await memory.query({
     threadId,
-    resourceId: 'default-user',
+    resourceId,
   })
 
   if (!result?.messages) {
     return []
   }
 
-  return result.messages.map((msg: { role: string; content: unknown }) => ({
-    role: msg.role,
-    content:
-      typeof msg.content === 'string'
-        ? msg.content
-        : JSON.stringify(msg.content),
-  }))
+  // Map to ModelMessage format
+  return result.messages.map(
+    (msg: { role: string; content: unknown }): ModelMessage => ({
+      role: msg.role as 'user' | 'assistant' | 'system',
+      content:
+        typeof msg.content === 'string'
+          ? msg.content
+          : JSON.stringify(msg.content),
+    })
+  )
 }
 
 /**
