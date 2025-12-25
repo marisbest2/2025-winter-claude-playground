@@ -118,6 +118,56 @@ read -s KEY && echo "ANTHROPIC_API_KEY=$KEY" >> .env.local
 - Zod for runtime validation
 - TDD where possible (write tests first)
 
+## Feature Development Workflow
+
+For each new feature:
+
+### 1. Identify Next Item
+
+- Check [PROJECT_PLAN.md](docs/PROJECT_PLAN.md) for the current milestone and next item
+- Create a feature branch: `git checkout -b feature/description`
+- Commit and push throughout development
+
+### 2. Flesh Out User Stories
+
+- Expand the user stories from PROJECT_PLAN.md with details
+- Add testing stories (how we'll verify it works)
+- Identify corner cases and clarifications needed
+- **Check in with user** before proceeding
+
+### 3. Create Implementation Plan
+
+- Design the technical approach
+- Identify files to create/modify
+- Note dependencies and risks
+- **Check in with user** and iterate on the plan
+
+### 4. Build Tests First (TDD)
+
+- Write tests based on testing stories
+- Tests should fail initially (red)
+- Commit the tests
+
+### 5. Build Features
+
+- Implement until tests pass (green)
+- Commit working code
+- Run full test suite
+
+### 6. User Testing
+
+- **Check in with user** to test together
+- Demo the feature
+- Address any issues found
+
+### 7. Cleanup & Merge
+
+- Clean up code, add comments if needed
+- Update PROJECT_PLAN.md to mark item complete
+- Commit final changes
+- Create PR: `gh pr create`
+- Merge: `gh pr merge --squash`
+
 ## Current Status
 
 **Active Milestone:** 2B - Mastra + MCP Architecture
