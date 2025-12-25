@@ -209,7 +209,7 @@ Each municipality can have different backend systems:
 #### Task Breakdown (Parallelizable)
 
 ```
-2B.1 (Mastra Core) ──┬──► 2B.2 (MCP Server)
+2B.1 (Mastra Core) ──┬──► 2B.2 (MCP-Mastra Wiring)
                      ├──► 2B.3 (UI: Tool Transparency)
                      └──► 2B.4 (Caching Layer)
                               │
@@ -217,30 +217,54 @@ Each municipality can have different backend systems:
                           2B.5 (Integration)
 ```
 
-| Task         | Description                                    | Depends On       | Parallel With |
-| ------------ | ---------------------------------------------- | ---------------- | ------------- |
-| ✅ **2B.1** | Install Mastra, configure agent with memory    | -                | -             |
-| **2B.2**     | Build MCP server with government-records tools | 2B.1             | 2B.3, 2B.4    |
-| **2B.3**     | Update UI to show tool calls and sources       | 2B.1             | 2B.2, 2B.4    |
-| **2B.4**     | Implement caching layer for responses          | 2B.1             | 2B.2, 2B.3    |
-| **2B.5**     | Integration testing, error handling            | 2B.2, 2B.3, 2B.4 | -             |
+| Task         | Description                                                   | Depends On       | Parallel With |
+| ------------ | ------------------------------------------------------------- | ---------------- | ------------- |
+| ✅ **2B.1** | Install Mastra, configure agent with memory                   | -                | -             |
+| **2B.2**     | Wire MCP tools to Mastra agent (stub data, prove integration) | 2B.1             | 2B.3, 2B.4    |
+| **2B.3**     | Update UI to show tool calls and sources                      | 2B.1             | 2B.2, 2B.4    |
+| **2B.4**     | Implement caching layer for responses                         | 2B.1             | 2B.2, 2B.3    |
+| **2B.5**     | Integration testing, error handling                           | 2B.2, 2B.3, 2B.4 | -             |
+
+**Note on 2B.2**: This task focuses on proving the MCP ↔ Mastra integration works end-to-end using realistic stub data. Real data source implementations are in Milestone 3.
 
 ---
 
-### Milestone 3: Scraper Reliability
+### Milestone 3: Data Source Implementation
 
-**Goal**: Fix Calendar.aspx scraping issues
+**Goal**: Implement real data sources for the Teaneck adapter (IQM2 scraping)
 
 **User Stories**:
 
+- As a user, I can see the list of real boards/committees in Teaneck
 - As a user, I can see recent meeting data (not just board names)
+- As a user, I can view meeting details including agenda and minutes links
 - As a user, I get cached data quickly when scraping is slow
 
 **Testing Stories**:
 
+- `list_boards` returns real board data from IQM2
 - At least 3 boards return meeting data successfully
+- `get_meeting` returns real agenda/minutes URLs
 - Scraper cache reduces redundant requests
 - Fallback to cached data when live scraping fails
+
+#### Task Breakdown
+
+```
+3.1 (IQM2 Boards) ──► 3.2 (IQM2 Meetings) ──► 3.3 (Meeting Details)
+                                                      │
+                                                      ▼
+                                              3.4 (Caching & Reliability)
+```
+
+| Task     | Description                                          | Depends On | Notes                                      |
+| -------- | ---------------------------------------------------- | ---------- | ------------------------------------------ |
+| **3.1**  | Implement `listBoards()` with Playwright IQM2 scraper | 2B.5       | Scrape board list from IQM2 portal         |
+| **3.2**  | Implement `listMeetings()` for IQM2                  | 3.1        | Handle Calendar.aspx timeouts              |
+| **3.3**  | Implement `getMeetingDetails()` with document URLs   | 3.2        | Extract agenda/minutes PDF links           |
+| **3.4**  | Add caching layer and retry logic                    | 3.3        | Persistent cache, fallback to cached data  |
+
+**Data Source**: IQM2 Portal at `https://teanecktownnj.iqm2.com/Citizens/`
 
 ---
 
