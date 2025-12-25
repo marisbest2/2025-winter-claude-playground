@@ -11,7 +11,7 @@
  */
 
 import type { ModelMessage } from 'ai'
-import { researchAgent, memory, getMcpToolsets } from './mastra'
+import { getResearchAgent, memory, getMcpToolsets } from './mastra'
 
 /**
  * Response from askQuestion - AI SDK compatible
@@ -61,7 +61,8 @@ export async function askQuestion(
   // Get MCP toolsets for government records tools
   const toolsets = options?.skipTools ? undefined : await getMcpToolsets()
 
-  const response = await researchAgent.generate(question, {
+  const agent = await getResearchAgent()
+  const response = await agent.generate(question, {
     threadId,
     resourceId,
     toolsets,
@@ -101,7 +102,8 @@ export async function askQuestionStream(
   // Get MCP toolsets for government records tools
   const toolsets = options?.skipTools ? undefined : await getMcpToolsets()
 
-  const { textStream } = await researchAgent.stream(question, {
+  const agent = await getResearchAgent()
+  const { textStream } = await agent.stream(question, {
     threadId,
     resourceId,
     toolsets,

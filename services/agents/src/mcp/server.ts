@@ -6,7 +6,7 @@
  * This server can be used by any MCP-compatible client (Mastra, Claude Desktop, etc.)
  *
  * Usage:
- *   npx tsx services/agents/src/mcp/server.ts
+ *   pnpm --filter @teaneck/agents mcp:serve
  *
  * Or via .mcp.json config:
  *   {

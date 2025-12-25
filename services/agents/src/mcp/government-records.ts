@@ -20,7 +20,10 @@ async function getAdapter(municipality: string): Promise<MunicipalityAdapter> {
   if (!adapters.has(municipality)) {
     const factory = ADAPTERS[municipality as keyof typeof ADAPTERS]
     if (!factory) {
-      throw new Error(`Unknown municipality: ${municipality}`)
+      const available = Object.keys(ADAPTERS).join(', ')
+      throw new Error(
+        `Unknown municipality: ${municipality}. Available municipalities: ${available}`
+      )
     }
     const adapter = await factory()
     await adapter.init()
@@ -39,7 +42,10 @@ export async function listBoards(params: {
   municipality: string
   jurisdiction?: 'municipal' | 'boe' | 'county' | 'state'
 }) {
-  console.log(`[MCP] list_boards(${JSON.stringify(params)})`)
+  const debugEnabled = process.env.DEBUG === 'true'
+  if (debugEnabled) {
+    console.error(`[MCP] list_boards(${JSON.stringify(params)})`)
+  }
   const adapter = await getAdapter(params.municipality)
   const boards = await adapter.listBoards()
 
@@ -53,6 +59,7 @@ export async function listBoards(params: {
  * MCP Tool: search_meetings
  *
  * Find meetings by board, date range, or topic.
+ * Returns all recent meetings if no filters specified.
  */
 export async function searchMeetings(params: {
   municipality: string
@@ -60,7 +67,10 @@ export async function searchMeetings(params: {
   query?: string
   limit?: number
 }) {
-  console.log(`[MCP] search_meetings(${JSON.stringify(params)})`)
+  const debugEnabled = process.env.DEBUG === 'true'
+  if (debugEnabled) {
+    console.error(`[MCP] search_meetings(${JSON.stringify(params)})`)
+  }
   const adapter = await getAdapter(params.municipality)
 
   if (params.query) {
@@ -71,7 +81,12 @@ export async function searchMeetings(params: {
     return adapter.listMeetings(params.boardId, { limit: params.limit })
   }
 
-  return []
+  // No filters specified - return recent meetings across all boards
+  const boards = await adapter.listBoards()
+  const allMeetings = await Promise.all(
+    boards.slice(0, 3).map(board => adapter.listMeetings(board.id, { limit: 5 }))
+  )
+  return allMeetings.flat().slice(0, params.limit || 10)
 }
 
 /**
@@ -83,7 +98,10 @@ export async function getMeeting(params: {
   municipality: string
   meetingId: string
 }) {
-  console.log(`[MCP] get_meeting(${JSON.stringify(params)})`)
+  const debugEnabled = process.env.DEBUG === 'true'
+  if (debugEnabled) {
+    console.error(`[MCP] get_meeting(${JSON.stringify(params)})`)
+  }
   const adapter = await getAdapter(params.municipality)
   return adapter.getMeetingDetails(params.meetingId)
 }
@@ -97,7 +115,10 @@ export async function searchDocuments(params: {
   municipality: string
   query: string
 }) {
-  console.log(`[MCP] search_documents(${JSON.stringify(params)})`)
+  const debugEnabled = process.env.DEBUG === 'true'
+  if (debugEnabled) {
+    console.error(`[MCP] search_documents(${JSON.stringify(params)})`)
+  }
   const adapter = await getAdapter(params.municipality)
   return adapter.searchDocuments(params.query)
 }
@@ -111,7 +132,10 @@ export async function getTranscript(params: {
   municipality: string
   meetingId: string
 }) {
-  console.log(`[MCP] get_transcript(${JSON.stringify(params)})`)
+  const debugEnabled = process.env.DEBUG === 'true'
+  if (debugEnabled) {
+    console.error(`[MCP] get_transcript(${JSON.stringify(params)})`)
+  }
   const adapter = await getAdapter(params.municipality)
   return adapter.getTranscript(params.meetingId)
 }
@@ -120,8 +144,11 @@ export async function getTranscript(params: {
  * Cleanup - close all adapters
  */
 export async function shutdown() {
+  const debugEnabled = process.env.DEBUG === 'true'
   for (const [name, adapter] of adapters) {
-    console.log(`[MCP] Closing adapter: ${name}`)
+    if (debugEnabled) {
+      console.error(`[MCP] Closing adapter: ${name}`)
+    }
     await adapter.close()
   }
   adapters.clear()

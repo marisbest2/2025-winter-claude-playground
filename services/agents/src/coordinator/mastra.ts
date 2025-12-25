@@ -79,42 +79,30 @@ You have access to the following tools for researching government records:
  * Research Agent - lazy initialization with MCP tools
  *
  * Use getResearchAgent() to get an initialized agent instance.
+ * MCP toolsets must be passed separately to agent.generate() calls.
  */
 let _researchAgent: Agent | null = null
 
 export async function getResearchAgent(): Promise<Agent> {
   if (!_researchAgent) {
-    // Get tools from MCP server
-    const toolsets = await mcpClient.getToolsets()
-
     _researchAgent = new Agent({
       name: 'government-records-agent',
       instructions: AGENT_INSTRUCTIONS,
       model: 'anthropic/claude-sonnet-4-20250514',
       memory,
     })
-
-    // Store toolsets for use in generate calls
-    ;(_researchAgent as Agent & { _toolsets: typeof toolsets })._toolsets = toolsets
   }
   return _researchAgent
 }
 
 /**
  * Get MCP toolsets for use with agent.generate()
+ *
+ * MCP toolsets should be passed to agent.generate() like this:
+ *   const agent = await getResearchAgent()
+ *   const toolsets = await getMcpToolsets()
+ *   await agent.generate('query', { toolsets })
  */
 export async function getMcpToolsets() {
   return mcpClient.getToolsets()
 }
-
-/**
- * Legacy export for backwards compatibility
- * Note: This agent won't have MCP tools attached.
- * Use getResearchAgent() for full functionality.
- */
-export const researchAgent = new Agent({
-  name: 'government-records-agent',
-  instructions: AGENT_INSTRUCTIONS,
-  model: 'anthropic/claude-sonnet-4-20250514',
-  memory,
-})
