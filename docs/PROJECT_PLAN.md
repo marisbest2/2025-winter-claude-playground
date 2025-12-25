@@ -217,13 +217,13 @@ Each municipality can have different backend systems:
                           2B.5 (Integration)
 ```
 
-| Task     | Description                                    | Depends On       | Parallel With |
-| -------- | ---------------------------------------------- | ---------------- | ------------- |
-| **2B.1** | Install Mastra, configure agent with memory    | -                | -             |
-| **2B.2** | Build MCP server with government-records tools | 2B.1             | 2B.3, 2B.4    |
-| **2B.3** | Update UI to show tool calls and sources       | 2B.1             | 2B.2, 2B.4    |
-| **2B.4** | Implement caching layer for responses          | 2B.1             | 2B.2, 2B.3    |
-| **2B.5** | Integration testing, error handling            | 2B.2, 2B.3, 2B.4 | -             |
+| Task         | Description                                    | Depends On       | Parallel With |
+| ------------ | ---------------------------------------------- | ---------------- | ------------- |
+| ✅ **2B.1** | Install Mastra, configure agent with memory    | -                | -             |
+| **2B.2**     | Build MCP server with government-records tools | 2B.1             | 2B.3, 2B.4    |
+| **2B.3**     | Update UI to show tool calls and sources       | 2B.1             | 2B.2, 2B.4    |
+| **2B.4**     | Implement caching layer for responses          | 2B.1             | 2B.2, 2B.3    |
+| **2B.5**     | Integration testing, error handling            | 2B.2, 2B.3, 2B.4 | -             |
 
 ---
 
