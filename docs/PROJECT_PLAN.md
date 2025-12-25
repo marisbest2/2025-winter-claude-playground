@@ -1,442 +1,390 @@
-# Teaneck Meeting Tracker - Project Plan / RFC
+# Government Records Deep Research Agent
 
 ## Overview
 
-This document breaks down the PRD into testable, incremental milestones. Each milestone should be independently deployable and verifiable.
+A **deep research agent** for government records that helps lawyers, journalists, and engaged citizens investigate local government decisions across multiple jurisdictions and data sources.
 
-**Approach**: Test-Driven Development (TDD) where possible. Write tests first, then implement.
+Unlike traditional search tools that return documents, this agent:
 
----
+- **Decomposes complex queries** into sub-questions
+- **Retrieves from multiple sources** (meetings, documents, transcripts, news)
+- **Synthesizes answers with citations** showing exactly where information came from
+- **Handles contradictions** between sources (agenda vs minutes vs video)
+- **Remembers context** across multi-turn conversations
 
-## Milestone 0: Data Source Exploration (Research)
+**Target Users**: Lawyers, regulators, journalists, civic researchers
 
-**Goal**: Understand the actual data sources before building anything.
-
-### Tasks
-
-- [ ] **0.1** Manual exploration of IQM2 portal
-  - Open https://teanecktownnj.iqm2.com/Citizens/default.aspx in browser
-  - Document all board/committee types available
-  - Document URL patterns for agendas, minutes, videos
-  - Check network requests for any JSON APIs
-  - Note any authentication requirements
-
-- [ ] **0.2** YouTube channel analysis
-  - Document video naming conventions
-  - Check if auto-captions are available
-  - Note upload frequency and delay from meeting date
-  - Test youtube-transcript library on a sample video
-
-- [ ] **0.3** Document findings in `docs/DATA_SOURCES.md`
-
-### Verification
-
-- DATA_SOURCES.md exists with documented URL patterns
-- At least 3 sample URLs for agendas, minutes, videos
+**Current Status**: Basic Q&A prototype working, refactoring to deep research agent architecture.
 
 ---
 
-## Milestone 1: Database Schema & Types
+## Tech Stack
 
-**Goal**: Define the data model and generate Prisma client.
-
-### Tasks
-
-- [ ] **1.1** Write Prisma schema (`packages/db/prisma/schema.prisma`)
-  - Board model
-  - Meeting model
-  - Agenda model (with items as JSON)
-  - Minutes model (with items as JSON)
-  - Video model
-  - Summary model
-
-- [ ] **1.2** Create shared TypeScript types (`packages/shared/src/types/`)
-  - Zod schemas for validation
-  - Inferred TypeScript types from Zod
-
-- [ ] **1.3** Run migration and verify
-  ```bash
-  pnpm --filter @teaneck/db db:migrate
-  ```
-
-### Tests
-
-- [ ] Type compilation passes
-- [ ] Can create and query a Meeting record
-- [ ] Zod schemas validate correctly
-
-### Verification
-
-```bash
-pnpm --filter @teaneck/db db:studio  # Visual inspection
-pnpm -r test  # All tests pass
-```
+| Category       | Technology                                      |
+| -------------- | ----------------------------------------------- |
+| **Framework**  | Next.js 16, React 19, Tailwind CSS              |
+| **Agent SDK**  | Mastra (multi-turn, memory, tool orchestration) |
+| **AI Model**   | Anthropic Claude API                            |
+| **Tools**      | MCP (Model Context Protocol) servers            |
+| **Scraping**   | Playwright (dynamic content)                    |
+| **Database**   | Prisma + SQLite (dev) → PostgreSQL (prod)       |
+| **Video**      | YouTube Data API, youtube-transcript            |
+| **Deployment** | Vercel                                          |
 
 ---
 
-## Milestone 2: Scraper Agent - IQM2 Portal
-
-**Goal**: Fetch meeting data from IQM2 portal.
-
-### Tasks
-
-- [ ] **2.1** Install Playwright
-
-  ```bash
-  pnpm --filter @teaneck/agents add playwright
-  ```
-
-- [ ] **2.2** Create IQM2 scraper (`services/agents/src/scrapers/iqm2.ts`)
-  - Navigate to portal
-  - List all boards
-  - For each board, list meetings
-  - For each meeting, get agenda/minutes URLs
-  - Download PDFs
-
-- [ ] **2.3** Create PDF text extractor
-  - Option A: Use Claude API directly (send PDF)
-  - Option B: Use pdf-parse for text extraction
-
-- [ ] **2.4** Store scraped data in database
-
-### Tests
-
-- [ ] Unit test: Parse meeting list HTML (mock data)
-- [ ] Unit test: Extract document URLs from meeting page
-- [ ] Integration test: Scrape one real meeting (can be skipped in CI)
-
-### Verification
-
-- Can run scraper and see meetings in database
-- At least 5 meetings with agendas stored
-
----
-
-## Milestone 3: Scraper Agent - YouTube
-
-**Goal**: Fetch video metadata and transcripts from YouTube.
-
-### Tasks
-
-- [ ] **3.1** Set up YouTube Data API
-  - Create Google Cloud project
-  - Enable YouTube Data API v3
-  - Get API key
-  - Add to environment variables
-
-- [ ] **3.2** Create YouTube scraper (`services/agents/src/scrapers/youtube.ts`)
-  - Fetch channel videos
-  - Match videos to meetings by title/date
-  - Get video metadata (duration, publish date)
-
-- [ ] **3.3** Transcript extraction
-  - Use youtube-transcript or similar library
-  - Fall back to Whisper if needed (future)
-
-- [ ] **3.4** Store video data in database
-
-### Tests
-
-- [ ] Unit test: Parse video title to extract meeting date/type
-- [ ] Unit test: Match video to meeting record
-- [ ] Integration test: Fetch transcript for one video
-
-### Verification
-
-- Can run YouTube scraper and see videos in database
-- At least 3 videos with transcripts stored
-
----
-
-## Milestone 4: Summarizer Agent
-
-**Goal**: Generate AI summaries of meeting content.
-
-### Tasks
-
-- [ ] **4.1** Create Anthropic client wrapper (`services/agents/src/lib/claude.ts`)
-  - Handle API key from env
-  - Retry logic
-  - Token tracking
-
-- [ ] **4.2** Create agenda summarizer (`services/agents/src/summarizers/agenda.ts`)
-  - Input: Agenda PDF or text
-  - Output: Structured summary (key items, expected votes, etc.)
-  - Prompt engineering for consistent output
-
-- [ ] **4.3** Create minutes summarizer (`services/agents/src/summarizers/minutes.ts`)
-  - Input: Minutes PDF or text
-  - Output: Structured summary (decisions, votes, action items)
-
-- [ ] **4.4** Create video summarizer (`services/agents/src/summarizers/video.ts`)
-  - Input: Transcript text
-  - Output: Structured summary with timestamps
-
-- [ ] **4.5** Store summaries in database
-
-### Tests
-
-- [ ] Unit test: Summary output matches expected Zod schema
-- [ ] Unit test: Handles empty/malformed input gracefully
-- [ ] Integration test: Generate summary for one real agenda
-
-### Verification
-
-- Run summarizer on 3 meetings, review output quality manually
-- Summaries stored in database with correct relations
-
----
-
-## Milestone 5: Cross-Reference Agent
-
-**Goal**: Match agenda items to minutes and video timestamps.
-
-### Tasks
-
-- [ ] **5.1** Create cross-reference agent (`services/agents/src/cross-reference/matcher.ts`)
-  - Input: Agenda items, Minutes items
-  - Output: Matched pairs with status (discussed, tabled, not discussed)
-
-- [ ] **5.2** Video timestamp linking
-  - Match agenda items to transcript sections
-  - Extract video timestamps
-
-- [ ] **5.3** Store cross-references in database
-
-### Tests
-
-- [ ] Unit test: Match obvious pairs (same title)
-- [ ] Unit test: Handle unmatched items
-- [ ] Integration test: Cross-reference one complete meeting
-
-### Verification
-
-- View cross-references in database
-- Manual review of matching accuracy
-
----
-
-## Milestone 6: Coordinator Agent
-
-**Goal**: Orchestrate all agents for end-to-end processing.
-
-### Tasks
-
-- [ ] **6.1** Create coordinator (`services/agents/src/coordinator/index.ts`)
-  - Define processing pipeline
-  - Handle dependencies (scrape before summarize)
-  - Error handling and retries
-
-- [ ] **6.2** Create CLI runner
-
-  ```bash
-  pnpm --filter @teaneck/agents start
-  # or
-  pnpm --filter @teaneck/agents process-meeting --id=123
-  ```
-
-- [ ] **6.3** Add job queue (optional, can be simple loop for v1)
-
-### Tests
-
-- [ ] Integration test: Process one meeting end-to-end
-- [ ] Test: Handles partial failures gracefully
-
-### Verification
-
-- Run coordinator, see complete meeting data in database
-- Logs show clear pipeline progression
-
----
-
-## Milestone 7: Web UI - Basic Display
-
-**Goal**: Display meetings and summaries on web.
-
-### Tasks
-
-- [ ] **7.1** Create API routes (`apps/web/src/app/api/`)
-  - GET /api/meetings - List meetings
-  - GET /api/meetings/[id] - Get meeting with summary
-  - GET /api/boards - List boards
-
-- [ ] **7.2** Create pages
-  - `/` - Homepage with recent meetings
-  - `/meetings` - All meetings list
-  - `/meetings/[id]` - Meeting detail with summary
-
-- [ ] **7.3** Basic styling with Tailwind
-
-### Tests
-
-- [ ] API route tests with mock data
-- [ ] Component tests for meeting card, summary display
-
-### Verification
-
-- Visit localhost:3000, see list of meetings
-- Click meeting, see summary
-
----
-
-## Milestone 8: Web UI - Enhanced Features
-
-**Goal**: Add cross-reference view and search.
-
-### Tasks
-
-- [ ] **8.1** Cross-reference display
-  - Side-by-side agenda vs minutes view
-  - Visual indicators for match status
-
-- [ ] **8.2** Search functionality
-  - Full-text search across summaries
-  - Filter by board, date range
-
-- [ ] **8.3** PDF viewer integration
-  - Embed or link to original documents
-
-### Tests
-
-- [ ] Search returns expected results
-- [ ] Cross-reference view renders correctly
-
-### Verification
-
-- Search for "affordable housing", see relevant meetings
-- View cross-reference for a meeting
-
----
-
-## Milestone 9: Deployment
-
-**Goal**: Deploy to Vercel with production database.
-
-### Tasks
-
-- [ ] **9.1** Set up Vercel project
-  - Connect GitHub repo
-  - Configure build settings (monorepo)
-
-- [ ] **9.2** Set up production database
-  - Vercel Postgres or Neon
-  - Update connection string
-
-- [ ] **9.3** Configure environment variables
-  - ANTHROPIC_API_KEY
-  - DATABASE_URL
-  - YOUTUBE_API_KEY
-
-- [ ] **9.4** Set up scheduled scraping
-  - Vercel Cron or GitHub Actions
-  - Run daily/weekly
-
-### Verification
-
-- Site accessible at public URL
-- New meeting appears within 48 hours of publication
-
----
-
-## Milestone 10: Polish & Launch
-
-**Goal**: Production-ready quality.
-
-### Tasks
-
-- [ ] **10.1** Error handling and logging
-- [ ] **10.2** Rate limiting
-- [ ] **10.3** SEO optimization
-- [ ] **10.4** Analytics
-- [ ] **10.5** README and documentation
-- [ ] **10.6** Announce to Teaneck community
-
----
-
-## Development Workflow
-
-### For each milestone:
-
-1. Create feature branch: `git checkout -b milestone-X-description`
-2. Write tests first (TDD)
-3. Implement until tests pass
-4. Manual verification
-5. Create PR with summary
-6. Squash merge to main
-
-### Commands Reference
-
-```bash
-# Development
-pnpm dev                           # Start web app
-pnpm --filter @teaneck/agents dev  # Watch mode for agents
-pnpm -r test                       # Run all tests
-pnpm -r test:run                   # Run tests once (CI)
-
-# Database
-pnpm --filter @teaneck/db db:migrate  # Run migrations
-pnpm --filter @teaneck/db db:studio   # Open Prisma Studio
-
-# Formatting
-pnpm format                        # Format all code
-pnpm lint                          # Lint all code
-```
-
----
-
-## Dependencies Between Milestones
+## Multi-Agent Architecture
 
 ```
-M0 (Research)
+┌─────────────────────────────────────────────────────────────┐
+│                        User Interface                        │
+│                  (Next.js /qa chat interface)                │
+└─────────────────────────────────────────────────────────────┘
+                              │
+                              ▼
+┌─────────────────────────────────────────────────────────────┐
+│                    Mastra Coordinator Agent                  │
+│                                                              │
+│  • Understands user questions                                │
+│  • Decides which tools to call                               │
+│  • Manages multi-turn conversation state                     │
+│  • Synthesizes answers from tool results                     │
+└─────────────────────────────────────────────────────────────┘
+                              │
+                              ▼
+┌─────────────────────────────────────────────────────────────┐
+│              Government Records MCP Server                   │
+│                                                              │
+│  Domain-driven tools (same interface for all municipalities) │
+│    • list_boards       • search_meetings                     │
+│    • get_meeting       • search_documents                    │
+│    • get_transcript    • search_by_topic                     │
+└─────────────────────────────────────────────────────────────┘
+                              │
+              ┌───────────────┼───────────────┐
+              ▼               ▼               ▼
+┌─────────────────┐ ┌─────────────────┐ ┌─────────────────┐
+│ Teaneck Adapter │ │ [Future]        │ │ [Future]        │
+│                 │ │ Other Municipal │ │ County/State    │
+│ • IQM2 scraper  │ │                 │ │                 │
+│ • YouTube API   │ │ • Granicus API  │ │ • Legistar API  │
+│ • teaneck.gov   │ │ • Vimeo         │ │ • YouTube       │
+└─────────────────┘ └─────────────────┘ └─────────────────┘
+          │
+          ▼
+┌─────────────────┐
+│   PostgreSQL    │
+│   (Cache +      │
+│    Mastra mem)  │
+└─────────────────┘
+```
+
+### Design Principles
+
+- **Domain-driven**: Tools reflect how users think (boards, meetings, documents) not data sources
+- **Adapter pattern**: Same tool interface works across different municipalities with different backends
+- **Jurisdiction-aware**: Users can filter by municipal, BOE, county, state levels
+
+### Future Agents (Post-MVP)
+
+| Agent              | Purpose                                           |
+| ------------------ | ------------------------------------------------- |
+| Summarizer Agent   | Generate structured summaries of meetings         |
+| Cross-Ref Agent    | Match agenda items to minutes and video           |
+| Notification Agent | Alert users to new meetings on topics of interest |
+
+---
+
+## MCP Server Interfaces
+
+### Government Records MCP (Domain-Driven)
+
+Tools are designed around user mental models, not data sources:
+
+| Tool               | Description                                       | Example Query                            |
+| ------------------ | ------------------------------------------------- | ---------------------------------------- |
+| `list_boards`      | Get boards/committees, optionally by jurisdiction | "What boards exist in Teaneck?"          |
+| `search_meetings`  | Find meetings by board, date range, or topic      | "Planning Board meetings about Main St"  |
+| `get_meeting`      | Get full meeting details (agenda, minutes, video) | "Details for Dec 15 Council meeting"     |
+| `search_documents` | Search across agendas, minutes, resolutions       | "Resolutions about affordable housing"   |
+| `get_transcript`   | Get video transcript with timestamps              | "What was said at 45:00?"                |
+| `search_by_topic`  | Cross-reference search across all content types   | "Everything about 'Main St development'" |
+
+### Jurisdiction Types
+
+| Level     | Examples                                 |
+| --------- | ---------------------------------------- |
+| Municipal | Township Council, Planning Board, Zoning |
+| BOE       | Board of Education                       |
+| County    | Bergen County Freeholders (future)       |
+| State     | NJ Legislature (future)                  |
+
+### Adapter Implementations
+
+Each municipality can have different backend systems:
+
+| Municipality | Meeting Portal | Video Platform | Documents    |
+| ------------ | -------------- | -------------- | ------------ |
+| Teaneck      | IQM2           | YouTube        | IQM2 PDFs    |
+| [Future]     | Granicus       | Vimeo          | Legistar     |
+| [Future]     | Legistar       | YouTube        | Direct links |
+
+### Cache Tools
+
+| Tool           | Description                        |
+| -------------- | ---------------------------------- |
+| `search_cache` | Find previously answered questions |
+| `get_summary`  | Retrieve cached meeting summary    |
+
+---
+
+## Milestones
+
+### ✅ Milestone 0: Research & Setup
+
+**Status**: Complete
+
+**What we learned**:
+
+- IQM2 portal requires Playwright (dynamic content)
+- 11 boards/committees discovered
+- Calendar.aspx pages are unreliable (frequent timeouts)
+- No authentication required
+
+---
+
+### ✅ Milestone 1: Foundation
+
+**Status**: Complete
+
+**What we built**:
+
+- Monorepo with pnpm workspaces
+- Modular IQM2 scraper (extensible for other governments)
+- Basic types and interfaces
+
+---
+
+### ✅ Milestone 2A: Basic Q&A Prototype
+
+**Status**: Complete (needs refactoring)
+
+**User Stories**:
+
+- ✅ As a user, I can ask a question about Teaneck meetings
+- ✅ As a user, I see sample questions to get started
+- ✅ As a user, I get an AI-generated answer in markdown
+- ❌ As a user, I can ask follow-up questions (not working)
+- ❌ As a user, I get specific meeting data (scraping unreliable)
+
+**Known Issues**:
+
+- Calendar.aspx pages fail → 0 meetings fetched
+- Single-turn only → no conversation memory
+- 10-15s response time → scrapes everything upfront
+
+---
+
+### 🔄 Milestone 2B: Mastra + MCP Architecture
+
+**Status**: In Progress
+
+**Goal**: Multi-turn agent with intelligent tool use
+
+**User Stories**:
+
+- As a user, I can ask follow-up questions and the agent remembers context
+- As a user, I see which tools the agent used to answer my question
+- As a user, I get fast responses when asking similar questions (cached)
+- As a user, the agent gracefully handles scraping failures and tells me what it tried
+
+**Testing Stories**:
+
+- Agent uses `search_cache` before scraping
+- Agent calls `list_boards` for board-related questions
+- Agent retries different boards when `list_meetings` fails
+- Conversation history persists across page refreshes
+- Tool calls are visible in UI
+
+---
+
+### Milestone 3: Scraper Reliability
+
+**Goal**: Fix Calendar.aspx scraping issues
+
+**User Stories**:
+
+- As a user, I can see recent meeting data (not just board names)
+- As a user, I get cached data quickly when scraping is slow
+
+**Testing Stories**:
+
+- At least 3 boards return meeting data successfully
+- Scraper cache reduces redundant requests
+- Fallback to cached data when live scraping fails
+
+---
+
+### Milestone 4: YouTube Integration
+
+**Goal**: Add video metadata and transcripts
+
+**User Stories**:
+
+- As a user, I can ask "What was discussed at the last council meeting?"
+- As a user, I get links to relevant video timestamps
+- As a user, I can search across video transcripts
+
+**Testing Stories**:
+
+- Videos are matched to meetings by date/title
+- Transcripts are fetched and searchable
+- YouTube MCP tools are available to agent
+
+---
+
+### Milestone 5: Summarization
+
+**Goal**: Generate AI summaries of meeting content
+
+**User Stories**:
+
+- As a user, I can see a 2-minute summary of any meeting
+- As a user, I can see what votes were taken
+- As a user, I can see action items from a meeting
+
+**Testing Stories**:
+
+- Agenda PDFs are parsed and summarized
+- Minutes are parsed with vote extraction
+- Video transcripts are summarized with timestamps
+- Summaries are cached in database
+
+---
+
+### Milestone 6: Cross-Reference
+
+**Goal**: Match agenda items to minutes and video
+
+**User Stories**:
+
+- As a user, I can see which agenda items were actually discussed
+- As a user, I can jump to the video timestamp for any agenda item
+- As a user, I can compare "what was planned" vs "what happened"
+
+**Testing Stories**:
+
+- Agenda items are matched to corresponding minutes sections
+- Video timestamps are linked to agenda items
+- UI shows side-by-side comparison
+
+---
+
+### Milestone 7: Search & Discovery
+
+**Goal**: Full-text search and topic tracking
+
+**User Stories**:
+
+- As a user, I can search for "affordable housing" across all meetings
+- As a user, I can filter by board and date range
+- As a user, I can track a topic over time
+
+**Testing Stories**:
+
+- Full-text search returns relevant results
+- Filters work correctly
+- Topic tracking shows chronological results
+
+---
+
+### Milestone 8: Production Deployment
+
+**Goal**: Deploy to production with real database
+
+**User Stories**:
+
+- As a user, I can access the site at a public URL
+- As a user, new meetings appear within 48 hours
+
+**Testing Stories**:
+
+- Site is deployed to Vercel
+- PostgreSQL database is configured
+- Scheduled scraping runs daily
+- Environment variables are secured
+
+---
+
+### Milestone 9: Polish & Launch
+
+**Goal**: Production-ready quality
+
+**User Stories**:
+
+- As a user, I get helpful error messages
+- As a user, the site is fast and responsive
+- As a Teaneck resident, I can share meeting summaries on social media
+
+**Testing Stories**:
+
+- Error handling covers edge cases
+- SEO metadata is configured
+- Analytics are tracking usage
+- Rate limiting prevents abuse
+
+---
+
+## Dependency Graph
+
+```
+✅ M0 (Research)
  │
  ▼
-M1 (Schema) ◄────────────────────┐
- │                               │
- ├──► M2 (IQM2 Scraper)          │
- │     │                         │
- │     ▼                         │
- ├──► M3 (YouTube Scraper)       │
- │     │                         │
- │     ▼                         │
- └──► M4 (Summarizer) ◄──────────┤
-       │                         │
-       ▼                         │
-      M5 (Cross-Reference)       │
-       │                         │
-       ▼                         │
-      M6 (Coordinator)           │
-       │                         │
-       ▼                         │
-      M7 (Basic UI) ─────────────┘
+✅ M1 (Foundation)
+ │
+ ▼
+✅ M2A (Basic Q&A)
+ │
+ ▼
+🔄 M2B (Mastra + MCP) ◄─────────────┐
+ │                                  │
+ ├──► M3 (Scraper Reliability)      │
+ ├──► M4 (YouTube)                  │
+ └──► M5 (Summarization)            │
+       │                            │
+       ▼                            │
+      M6 (Cross-Reference)          │
+       │                            │
+       ▼                            │
+      M7 (Search) ──────────────────┘
        │
        ▼
-      M8 (Enhanced UI)
+      M8 (Deployment)
        │
        ▼
-      M9 (Deployment)
-       │
-       ▼
-      M10 (Launch)
+      M9 (Launch)
 ```
 
-**Parallelizable**: M2, M3, M4 can be worked on in parallel after M1
+**Parallelizable**: After M2B, milestones 3/4/5 can be worked on in parallel.
 
 ---
 
 ## Risk Mitigation
 
-| Risk                          | Mitigation                                                |
-| ----------------------------- | --------------------------------------------------------- |
-| IQM2 blocks scraping          | Use Playwright with human-like delays, respect robots.txt |
-| YouTube API quota limits      | Cache aggressively, only fetch new videos                 |
-| Claude API costs              | Summarize incrementally, cache results                    |
-| PDF parsing failures          | Fall back to Claude vision for complex PDFs               |
-| Video transcripts unavailable | Plan for Whisper fallback                                 |
+| Risk                   | Mitigation                                   |
+| ---------------------- | -------------------------------------------- |
+| IQM2 blocks scraping   | Human-like delays, respect robots.txt        |
+| Calendar.aspx timeouts | `retry_meetings` tool, cache aggressively    |
+| YouTube quota limits   | Cache transcripts, only fetch new videos     |
+| Claude API costs       | Cache answers, use `search_cache` tool first |
+| PDF parsing failures   | Fall back to Claude vision                   |
 
 ---
 
 ## Next Steps
 
-1. Complete Milestone 0 (Research) to confirm data source access
-2. Start Milestone 1 (Schema) immediately after
-3. Decide on parallel work split for M2/M3/M4
+1. Install Mastra and configure PostgreSQL storage
+2. Build IQM2 MCP server with retry logic
+3. Integrate Mastra agent with multi-turn memory
+4. Update UI for conversation history and tool transparency
