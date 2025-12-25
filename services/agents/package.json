@@ -13,14 +13,19 @@
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.71.2",
+    "@mastra/core": "^0.24.9",
+    "@mastra/libsql": "^0.16.4",
+    "@mastra/memory": "^0.15.13",
     "@teaneck/db": "workspace:*",
     "@teaneck/shared": "workspace:*",
+    "ai": "^6.0.3",
     "cheerio": "^1.1.2",
     "playwright": "^1.57.0",
     "zod": "^4.2.1"
   },
   "devDependencies": {
     "@types/node": "^20",
+    "dotenv": "^17.2.3",
     "tsx": "^4.19.2",
     "typescript": "^5",
     "vitest": "^4.0.16"

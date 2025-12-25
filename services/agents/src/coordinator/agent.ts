@@ -6,65 +6,136 @@
  * - Multi-turn conversation memory
  * - Tool orchestration via MCP
  * - Response generation with Claude
+ *
+ * Types are aligned with Vercel AI SDK for UI compatibility.
  */
 
-import { deepResearch } from '../research'
+import type { ModelMessage } from 'ai'
+import { researchAgent, memory } from './mastra'
 
-// TODO: Import from @mastra/core once installed
-// import { Agent } from '@mastra/core/agent'
-// import { Memory } from '@mastra/memory'
-// import { PostgresStore } from '@mastra/pg'
-
-export interface AgentResponse {
-  answer: string
+/**
+ * Response from askQuestion - AI SDK compatible
+ */
+export interface GenerateResponse {
+  /** The generated text response */
+  text: string
+  /** Thread ID for conversation continuity */
   threadId: string
-  toolsUsed: string[]
-  sources: Array<{ title: string; url?: string }>
+  /** Tool calls made during generation (raw from Mastra) */
+  toolCalls: unknown[]
+  /** Token usage stats */
+  usage?: {
+    promptTokens: number
+    completionTokens: number
+    totalTokens: number
+  }
+}
+
+/**
+ * Response from askQuestionStream - AI SDK compatible
+ */
+export interface StreamResponse {
+  /** Async iterable of text chunks */
+  textStream: AsyncIterable<string>
+  /** Thread ID for conversation continuity */
+  threadId: string
 }
 
 /**
  * Ask a question about government records
- *
- * This is the main entry point for the deep research agent.
  */
 export async function askQuestion(
   question: string,
   options?: {
     threadId?: string
-    userId?: string
-    municipality?: string
+    resourceId?: string
   }
-): Promise<AgentResponse> {
-  const municipality = options?.municipality ?? 'teaneck'
-  const threadId = options?.threadId ?? `thread-${Date.now()}`
+): Promise<GenerateResponse> {
+  const threadId = options?.threadId ?? generateThreadId()
+  const resourceId = options?.resourceId ?? 'default-user'
 
-  console.log(`[Agent] askQuestion("${question}")`)
-  console.log(`  Municipality: ${municipality}`)
-  console.log(`  Thread: ${threadId}`)
-
-  // TODO: Replace with Mastra agent once installed
-  // For now, use the deep research pipeline directly
-
-  const result = await deepResearch(question, municipality)
+  const response = await researchAgent.generate(question, {
+    threadId,
+    resourceId,
+  })
 
   return {
-    answer: result.answer,
+    text: response.text,
     threadId,
-    toolsUsed: [], // TODO: Track from MCP calls
-    sources: result.sources.map(s => ({ title: s.title, url: s.url })),
+    toolCalls: response.toolCalls ?? [],
+    usage: response.usage
+      ? {
+          promptTokens: response.usage.inputTokens ?? 0,
+          completionTokens: response.usage.outputTokens ?? 0,
+          totalTokens: response.usage.totalTokens ?? 0,
+        }
+      : undefined,
   }
 }
 
 /**
- * Create a configured Mastra agent
- *
- * TODO: Implement once @mastra/core is installed
+ * Ask a question with streaming response
  */
-export async function createAgent() {
-  console.log(`[Agent] createAgent() - stub, waiting for Mastra installation`)
+export async function askQuestionStream(
+  question: string,
+  options?: {
+    threadId?: string
+    resourceId?: string
+  }
+): Promise<StreamResponse> {
+  const threadId = options?.threadId ?? generateThreadId()
+  const resourceId = options?.resourceId ?? 'default-user'
 
-  // TODO: Return configured Agent instance
-  // See implementation plan in .claude/plans/tingly-petting-snail.md
+  const { textStream } = await researchAgent.stream(question, {
+    threadId,
+    resourceId,
+  })
 
-  return null
+  return {
+    textStream,
+    threadId,
+  }
+}
+
+/**
+ * Create a new conversation thread
+ */
+export async function createThread(): Promise<{ threadId: string }> {
+  return { threadId: generateThreadId() }
+}
+
+/**
+ * Get conversation history for a thread
+ * Returns ModelMessage[] for AI SDK compatibility
+ */
+export async function getThreadHistory(
+  threadId: string,
+  resourceId: string = 'default-user'
+): Promise<ModelMessage[]> {
+  const result = await memory.query({
+    threadId,
+    resourceId,
+  })
+
+  if (!result?.messages) {
+    return []
+  }
+
+  // Map to ModelMessage format
+  return result.messages.map(
+    (msg: { role: string; content: unknown }): ModelMessage => ({
+      role: msg.role as 'user' | 'assistant' | 'system',
+      content:
+        typeof msg.content === 'string'
+          ? msg.content
+          : JSON.stringify(msg.content),
+    })
+  )
+}
+
+/**
+ * Generate a unique thread ID
+ */
+function generateThreadId(): string {
+  return `thread-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`
 }

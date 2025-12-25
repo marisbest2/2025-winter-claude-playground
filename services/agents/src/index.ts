@@ -10,8 +10,13 @@
  * - coordinator/ - Mastra agent orchestration
  */
 
-// Main entry point
-export { askQuestion, createAgent } from './coordinator'
+// Main entry point - Mastra agent
+export {
+  askQuestion,
+  askQuestionStream,
+  createThread,
+  getThreadHistory,
+} from './coordinator'
 
 // Deep research pipeline
 export { deepResearch } from './research'
